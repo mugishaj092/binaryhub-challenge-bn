@@ -17,6 +17,15 @@ export class UserService {
         });
         return user;
     }
+    static async getUserByPhoneNumber(phone: string) {
+        const user = await prisma.user.findUnique({
+            where: { phoneNumber: phone },
+            include: {
+                role: true,
+            },
+        });
+        return user;
+    }
 
     static async verifyUser(token: string) {
         const decodedToken = decodeToken(token);

@@ -57,7 +57,11 @@ export const login = async (req: UserRequest, res: Response): Promise<void> => {
 };
 export const signup = async (req: Request, res: Response) => {
     const { firstName, lastName, email, password, phoneNumber } = req.body;
-
+    const existingUserByPhone= await UserService.getUserByPhoneNumber(phoneNumber);
+    if (existingUserByPhone) {
+        res.status(400).json({ message: 'User with this phone number already exists' });
+        return;
+    }
     try {
         const role = await prisma.role.findUnique({ where: { name: 'ADMIN' } });
         if (!role) {
@@ -187,6 +191,21 @@ export const deleteUser = async (req: Request, res: Response) => {
 export const addUser = async (req: Request, res: Response) => {
     try {
         const { email, firstName,lastName,phoneNumber } = req.body;
+        const existingUser = await UserService.getUserByEmail(email);
+        if (existingUser) {
+            res.status(400).json({ message: 'User already exists' });
+            return;
+        }
+        const role = await prisma.role.findUnique({ where: { name: 'ADMIN' } });
+        if (!role) {
+            res.status(500).json({ message: 'Role not found' });
+            return;
+        }
+        const existingUserByPhone = await UserService.getUserByPhoneNumber(phoneNumber);
+        if (existingUserByPhone) {
+            res.status(400).json({ message: 'User with this phone number already exists' });
+            return;
+        }
         const newUser = await UserService.addUser(email, firstName, lastName, phoneNumber);
         res.status(201).json({ message: 'User added successfully', user: newUser });
     } catch (error) {
